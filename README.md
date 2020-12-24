@@ -1,13 +1,13 @@
-## KVM for Nvidia AGX Xavier - Installation Guide
+## KVM for Nvidia AGX Xavier/Nano - Installation Guide
 
-This guide provides instructions to enable KVM virtualization on the Jetson AGX Xavier.
+This guide provides instructions to enable KVM virtualization on the Jetson AGX Xavier/Nano.
 The Jetson AGX Xavier incorporates an Nvidia Xavier t194 SoC with 8 Carmel processor cores.
 The Carmel cores of the Xavier T194 provides full support for virtualization with ARMv8.1 VHE.
 
 ##### Requirements:
-- An Nvidia Jetson AGX Xavier
+- An Nvidia Jetson AGX Xavier/Nano
 
-##### On your Xavier:
+##### On your Xavier/Nano:
 ```
 # Grab build dependencies
 sudo apt install build-essential libssl-dev bc
@@ -26,14 +26,17 @@ git clone https://github.com/b-man/Xavier-KVM.git ~/Xavier-KVM
 
 # Patch the device tree
 cd hardware/
+# for Xavier
 patch -Np1 -i ~/Xavier-KVM/patches/hardware/0001-Enable-KVM-support-for-t194.patch
+# for Nano
+patch -Np1 -i ~/Xavier-KVM/patches/hardware/0001-Enable-KVM-support-for-t210.patch
 
 # Patch the kernel
 cd ../kernel/kernel-4.9
 for i in ~/Xavier-KVM/patches/kernel/*; do patch -Np1 -i $i; done
 
 # Copy the kernel config to the kernel source tree
-cp ~/Xavier-KVM/config-4.9.140-tegra-virt .config
+cp ~/Xavier-KVM/config-4.9.140-kvm .config
 
 # Build kernel components
 make ARCH=arm64 Image -j8
@@ -45,15 +48,21 @@ sudo make ARCH=arm64 modules_install -j8
 
 # Install the kernel
 # On AGX Xavier, cboot accepts unsigned kernels when Secure Boot is off, which is the default.
-
+# for Xavier
 sudo rm /boot/Image.sig
-sudo rm /boot/tegra194-p2888-0001-p2822-0000.dtb 
+sudo rm /boot/tegra194-p2888-0001-p2822-0000.dtb
+# for Nano
+sudo rm /boot/Image
+sudo rm /boot/tegra210-p3448-0000-p3449-0000-a02.dtb
 
-sudo install -m 0644  arch/arm64/boot/Image /boot/
+sudo install -m 0644 arch/arm64/boot/Image /boot/
+# for Xavier
 sudo install -m 0644 arch/arm64/boot/dts/tegra194-p2888-0001-p2822-0000.dtb /boot/dtb/
+# for Nano
+sudo install -m 0644 arch/arm64/boot/dts/tegra210-p3448-0000-p3449-0000-a02.dtb /boot/dtb/
 ```
 
-Reboot your Jetson AGX Xavier. After rebooting you can verify that virtualization is enabled
+Reboot your Jetson AGX Xavier/Nano. After rebooting you can verify that virtualization is enabled
 by running the following commands:
 
 ##### Command:
