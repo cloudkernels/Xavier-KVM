@@ -22,6 +22,7 @@ RUN mkdir -p /store/toolchains
 WORKDIR /store/toolchains
 RUN wget https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz && xzcat gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz | tar -xf -
 
+RUN touch /tmp/blah
 # Download patch and kernel config.
 # If no branch is specified, then the latest L4T release is used.
 RUN git clone https://github.com/cloudkernels/Xavier-KVM.git ~/Xavier-KVM -b Nano/t210
@@ -41,7 +42,6 @@ RUN for i in ~/Xavier-KVM/patches/kernel/*; do patch -Np1 -i $i; done
 RUN cp ~/Xavier-KVM/config-4.9.140-kvm arch/arm64/configs/tegra-kvm_defconfig
 RUN touch .config
 RUN make ARCH=arm64 CROSS_COMPILE=/store/toolchains/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu- tegra-kvm_defconfig
-RUN cat .config |grep -i NET_SCH
 
 # Build kernel components
 RUN make ARCH=arm64 Image -j$(nproc) CROSS_COMPILE=/store/toolchains/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
