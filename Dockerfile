@@ -40,9 +40,8 @@ RUN for i in ~/Xavier-KVM/patches/kernel/*; do patch -Np1 -i $i; done
 # Copy the kernel config to the kernel source tree
 RUN cp ~/Xavier-KVM/config-4.9.140-kvm arch/arm64/configs/tegra-kvm_defconfig
 RUN touch .config
-RUN touch .config
-RUN touch .config
 RUN make ARCH=arm64 CROSS_COMPILE=/store/toolchains/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu- tegra-kvm_defconfig
+RUN cat .config |grep -i NET_SCH
 
 # Build kernel components
 RUN make ARCH=arm64 Image -j$(nproc) CROSS_COMPILE=/store/toolchains/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
