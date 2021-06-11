@@ -1,3 +1,6 @@
+###
+### DOCKER_BUILDKIT=1 docker build -f Dockerfile -t jetson-kernel --target artifact --output type=local,dest=./output .
+###
 FROM ananos/debian-dev-aarch64 as build
 
 # Grab build dependencies
