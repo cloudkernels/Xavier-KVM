@@ -1,0 +1,56 @@
+# This is a basic workflow to help you get started with Actions
+
+name: build
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: [self-hosted, cloud, x86_64]
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Runs a single command using the runners shell
+      - name: Run a one-line script
+        id: build-artifacts
+                
+        run: |
+          echo ::set-output name=build_exit_code::1
+          DOCKER_BUILDKIT=1 docker build --no-cache -f Dockerfile -t jetson-kernel --target artifact --output type=local,dest=${{github.workspace}}/artifacts/ .
+          echo ::set-output name=build_exit_code::$?
+
+      - name: Pack assets
+        id: pack-artifacts
+        if: steps.build-artifacts.outputs.build_exit_code == 0
+        working-directory: ${{ github.workspace }}/artifacts
+        run: |
+          echo ::set-output name=exit_code::1
+          zip -r \
+            ${{github.workspace}}/jetson_kernel.zip *
+          echo ::set-output name=exit_code::$?
+
+      - name: Upload artifact
+        id: upload-artifact
+        if: steps.pack-artifacts.outputs.build_exit_code == 0
+        uses: cloudkernels/minio-upload@master
+        with:
+          url: https://s3.nubificus.co.uk
+          access-key: ${{ secrets.AWS_ACCESS_KEY }}
+          secret-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          local-path: jetson_kernel.zip
+          remote-path: nbfc-assets/github/jetson_kernel/jetson_kernel.zip
